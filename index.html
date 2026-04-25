@@ -218,6 +218,17 @@ body.admin-mode .match-card:hover { border-color: var(--accent); }
 .match-card.bronze-match .match-stage { color: var(--bronze); }
 .match-card.final .match-stage { color: var(--gold); }
 
+.field-badge {
+  display: none;
+  align-self: flex-start;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  background: var(--text); color: white;
+  border-radius: 3px;
+  margin-bottom: 2px;
+}
+
 .match-row-inner {
   display: flex; align-items: center; gap: 12px;
   flex-wrap: wrap;
@@ -516,6 +527,7 @@ body.admin-mode .admin-only { display: flex !important; }
   .schedule-row.event-row { grid-template-columns: 1fr; }
   .time-block { border-right: none; padding-right: 0; padding-bottom: 12px; border-bottom: 1px solid var(--line); flex-direction: row; align-items: baseline; gap: 12px; }
   .field-headers { display: none; }
+  .field-badge { display: inline-flex; }
   .stats-grid { grid-template-columns: 1fr; }
   .stats-grid .stat { border-right: none; border-bottom: 1px solid var(--line); }
   .stats-grid .stat:last-child { border-bottom: none; }
@@ -1184,21 +1196,23 @@ function renderItem(item) {
         <div class="time-main mono">${item.time}</div>
         <div class="time-end">→ ${item.endTime}</div>
       </div>
-      ${renderMatchCard(item.f1)}
-      ${!isSingle && item.f2 ? renderMatchCard(item.f2) : ''}
+      ${renderMatchCard(item.f1, isSingle ? null : 1)}
+      ${!isSingle && item.f2 ? renderMatchCard(item.f2, 2) : ''}
     </div>
   `;
 }
 
-function renderMatchCard(m) {
+function renderMatchCard(m, fieldNum) {
   const score = scores[m.id];
   const hasScore = score && score.a !== undefined && score.b !== undefined;
   const detail = m.detail ? `<div class="match-detail">${m.detail}</div>` : '';
   const scoreDisplay = hasScore
     ? `<span class="match-score played">${score.a} : ${score.b}</span>`
     : '<span class="match-score empty">— : —</span>';
+  const fieldBadge = fieldNum ? `<div class="field-badge">Поле №${fieldNum}</div>` : '';
   return `
     <div class="match-card ${m.cls}" data-match-id="${m.id}" data-slot-a="${m.a}" data-slot-b="${m.b}" data-stage="${escapeHTML(m.stage)}">
+      ${fieldBadge}
       <div class="match-stage">${m.stage}</div>
       <div class="match-row-inner">
         ${teamDisplay(m.a, false)}
