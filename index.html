@@ -67,8 +67,28 @@ header {
   font-family: inherit; font-size: 12px; font-weight: 600;
   letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s;
 }
-.admin-toggle:hover, .admin-toggle.active { background: var(--accent); }
+.admin-toggle:hover { background: var(--accent); }
+.admin-toggle.active { background: var(--accent); }
 .admin-toggle svg { width: 14px; height: 14px; }
+
+.realtime-indicator {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--text-muted);
+  font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.realtime-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text-light);
+}
+.realtime-indicator.online .realtime-dot {
+  background: #22C55E;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15); }
+  50% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.05); }
+}
 
 .hero { max-width: 1280px; margin: 0 auto; padding: 80px 32px 60px; position: relative; }
 .hero-meta {
@@ -326,10 +346,11 @@ footer { border-top: 1px solid var(--line); padding: 48px 32px; background: var(
 }
 .modal-backdrop.active { display: flex; }
 .modal {
-  background: var(--bg-card); border-radius: 8px; max-width: 560px; width: 100%;
+  background: var(--bg-card); border-radius: 8px; max-width: 480px; width: 100%;
   max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
   animation: slideUp 0.3s ease-out;
 }
+.modal.wide { max-width: 560px; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 .modal-header {
   padding: 24px 32px; border-bottom: 1px solid var(--line);
@@ -339,6 +360,9 @@ footer { border-top: 1px solid var(--line); padding: 48px 32px; background: var(
 .modal-close { background: none; border: none; cursor: pointer; padding: 4px; color: var(--text-muted); }
 .modal-close:hover { color: var(--text); }
 .modal-body { padding: 32px; }
+.modal-intro {
+  font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6;
+}
 .field { margin-bottom: 20px; }
 .field-label-form {
   display: block; font-size: 11px; font-weight: 600;
@@ -351,6 +375,12 @@ footer { border-top: 1px solid var(--line); padding: 48px 32px; background: var(
   color: var(--text); transition: all 0.2s;
 }
 .input:focus { outline: none; border-color: var(--accent); background: white; }
+.error-msg {
+  background: rgba(209, 69, 69, 0.08); color: var(--red);
+  padding: 12px 14px; border-radius: 4px; font-size: 13px;
+  margin-bottom: 16px; display: none;
+}
+.error-msg.show { display: block; }
 
 .logo-upload { display: flex; align-items: center; gap: 16px; }
 .logo-preview {
@@ -375,6 +405,8 @@ footer { border-top: 1px solid var(--line); padding: 48px 32px; background: var(
 .btn.danger { color: var(--red); }
 .btn.danger:hover { background: var(--red); color: white; border-color: var(--red); }
 .btn.small { padding: 6px 10px; font-size: 11px; }
+.btn.full { width: 100%; padding: 14px; font-size: 14px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .modal-footer {
   padding: 20px 32px; border-top: 1px solid var(--line);
   display: flex; justify-content: flex-end; gap: 12px;
@@ -430,8 +462,32 @@ body.admin-mode .admin-only { display: flex !important; }
   box-shadow: 0 8px 24px rgba(0,0,0,0.15);
   opacity: 0; transform: translateY(20px); transition: all 0.3s;
   z-index: 300; pointer-events: none;
+  max-width: 90%;
 }
 .toast.show { opacity: 1; transform: translateY(0); }
+.toast.error { background: var(--red); }
+
+.loader {
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid currentColor; border-right-color: transparent;
+  border-radius: 50%; animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.full-loader {
+  position: fixed; inset: 0; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 500; transition: opacity 0.4s; pointer-events: none;
+}
+.full-loader.hide { opacity: 0; }
+
+.user-badge {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 12px; background: var(--bg-card);
+  border: 1px solid var(--line); border-radius: 20px;
+  font-size: 12px; font-weight: 500;
+}
+.user-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: #22C55E; }
 
 .star-logo { width: 100%; height: 100%; }
 .star-logo line { stroke: currentColor; stroke-width: 1.5; }
@@ -448,6 +504,7 @@ body.admin-mode .admin-only { display: flex !important; }
   .nav a { font-size: 12px; }
   .nav a[data-section-link="info"] { display: none; }
   .header-inner { flex-wrap: wrap; gap: 12px; }
+  .realtime-indicator span { display: none; }
 }
 @media (max-width: 640px) {
   .hero { padding: 48px 20px 40px; }
@@ -468,12 +525,18 @@ body.admin-mode .admin-only { display: flex !important; }
   .standings-table th:nth-child(4), .standings-table th:nth-child(5),
   .standings-table th:nth-child(6), .standings-table td:nth-child(4),
   .standings-table td:nth-child(5), .standings-table td:nth-child(6) { display: none; }
-  .nav a span:not(:first-child) { display: none; }
   .admin-toggle span { display: none; }
 }
 </style>
 </head>
 <body>
+
+<div class="full-loader" id="fullLoader">
+  <div style="text-align: center;">
+    <div class="loader" style="width: 32px; height: 32px; color: var(--accent);"></div>
+    <div style="margin-top: 16px; font-size: 13px; color: var(--text-muted);">Загрузка данных...</div>
+  </div>
+</div>
 
 <header>
   <div class="header-inner">
@@ -493,12 +556,16 @@ body.admin-mode .admin-only { display: flex !important; }
       <a data-section-link="standings">Таблица</a>
       <a data-section-link="teams">Команды</a>
       <a data-section-link="info">Информация</a>
+      <div class="realtime-indicator" id="realtimeIndicator" title="Статус подключения">
+        <div class="realtime-dot"></div>
+        <span id="realtimeLabel">Подключение...</span>
+      </div>
       <button class="admin-toggle" id="adminToggle">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
           <circle cx="12" cy="12" r="4"/>
         </svg>
-        <span id="adminToggleLabel">Управление</span>
+        <span id="adminToggleLabel">Войти</span>
       </button>
     </nav>
   </div>
@@ -570,7 +637,7 @@ body.admin-mode .admin-only { display: flex !important; }
   <h2 class="section-title">Положение <em>команд.</em></h2>
   <div class="banner">
     <svg class="banner-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    <div>Таблица обновляется автоматически. Команды на оранжевом фоне выходят в плей-офф.</div>
+    <div>Таблица обновляется автоматически в реальном времени. Команды на оранжевом фоне выходят в плей-офф.</div>
   </div>
   <div id="standingsContainer"></div>
 </section>
@@ -679,6 +746,33 @@ body.admin-mode .admin-only { display: flex !important; }
   </div>
 </footer>
 
+<!-- LOGIN MODAL -->
+<div class="modal-backdrop" id="loginModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Вход для администраторов</div>
+      <button class="modal-close" onclick="closeModal('loginModal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-intro">
+        Войдите как администратор, чтобы вводить счёт и управлять командами. Доступ имеют только зарегистрированные участники оргкомитета.
+      </div>
+      <div class="error-msg" id="loginError"></div>
+      <div class="field">
+        <label class="field-label-form">Email</label>
+        <input type="email" class="input" id="loginEmail" placeholder="admin@kexgroup.kz" autocomplete="email">
+      </div>
+      <div class="field">
+        <label class="field-label-form">Пароль</label>
+        <input type="password" class="input" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn primary full" id="loginBtn" onclick="performLogin()">Войти</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="teamModal">
   <div class="modal">
     <div class="modal-header">
@@ -697,7 +791,7 @@ body.admin-mode .admin-only { display: flex !important; }
         <div class="logo-upload">
           <div class="logo-preview" id="logoPreview"></div>
           <div class="logo-actions">
-            <button class="btn small" onclick="document.getElementById('logoInput').click()">Загрузить</button>
+            <button class="btn small" id="uploadBtn" onclick="document.getElementById('logoInput').click()">Загрузить</button>
             <button class="btn small danger" onclick="clearLogo()">Удалить</button>
           </div>
           <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="handleLogoUpload(event)">
@@ -710,13 +804,13 @@ body.admin-mode .admin-only { display: flex !important; }
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('teamModal')">Отмена</button>
-      <button class="btn primary" onclick="saveTeam()">Сохранить</button>
+      <button class="btn primary" id="saveTeamBtn" onclick="saveTeam()">Сохранить</button>
     </div>
   </div>
 </div>
 
 <div class="modal-backdrop" id="scoreModal">
-  <div class="modal">
+  <div class="modal wide">
     <div class="modal-header">
       <div class="modal-title">Результат матча</div>
       <button class="modal-close" onclick="closeModal('scoreModal')">
@@ -744,7 +838,7 @@ body.admin-mode .admin-only { display: flex !important; }
       <button class="btn danger" id="clearScoreBtn" onclick="clearScore()">Сбросить</button>
       <div style="display: flex; gap: 12px;">
         <button class="btn" onclick="closeModal('scoreModal')">Отмена</button>
-        <button class="btn primary" onclick="saveScore()">Сохранить</button>
+        <button class="btn primary" id="saveScoreBtn" onclick="saveScore()">Сохранить</button>
       </div>
     </div>
   </div>
@@ -752,7 +846,22 @@ body.admin-mode .admin-only { display: flex !important; }
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
+// ========== CONFIG ==========
+const SUPABASE_URL = 'https://gfqnmtbbazlrwdrfyvrb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmcW5tdGJiYXpscndkcmZ5dnJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzM5MjUsImV4cCI6MjA5MjcwOTkyNX0.P9uHcsyUeLHlEgPM9dpDhGUFxhg66zToDDwBbXbUOzo';
+const STORAGE_BUCKET = 'team-logos';
+
+if (typeof supabase === 'undefined' || !supabase.createClient) {
+  document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:sans-serif;"><h2>Ошибка загрузки библиотеки</h2><p>Не удалось загрузить Supabase. Проверьте подключение к интернету и обновите страницу.</p></div>';
+  throw new Error('Supabase library failed to load');
+}
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.__supabase = supabaseClient; // for debugging
+
+// ========== STATIC SCHEDULE DATA ==========
 const SCHEDULE = [
   { day: 1, date: '07.05', dayLabel: 'Открытие · группа', start: '18:00', end: '20:46', matchCount: 12, stage: 'Групповой', items: [
     { type: 'event', time: '18:00', duration: '10 мин', title: 'Церемония открытия турнира', sub: 'Приветствие, представление команд, фото' },
@@ -785,45 +894,149 @@ const SCHEDULE = [
 
 const SLOTS = ['A1','A2','A3','A4','B1','B2','B3','B4','C1','C2','C3','C4','D1','D2','D3','D4'];
 
+// ========== STATE ==========
 let teams = {};
 let scores = {};
 let isAdmin = false;
+let currentUser = null;
 let currentEditingTeam = null;
 let currentEditingMatch = null;
 
-async function loadData() {
-  try {
-    if (typeof window.storage !== 'undefined') {
-      try {
-        const teamsRes = await window.storage.get('teams', true);
-        if (teamsRes && teamsRes.value) teams = JSON.parse(teamsRes.value);
-      } catch(e) {}
-      try {
-        const scoresRes = await window.storage.get('scores', true);
-        if (scoresRes && scoresRes.value) scores = JSON.parse(scoresRes.value);
-      } catch(e) {}
-    } else {
-      const t = localStorage.getItem('kex_teams');
-      const s = localStorage.getItem('kex_scores');
-      if (t) teams = JSON.parse(t);
-      if (s) scores = JSON.parse(s);
-    }
-  } catch (e) { console.error('Load error', e); }
+// ========== DATA LOADING ==========
+async function loadTeams() {
+  const { data, error } = await supabaseClient.from('teams').select('*');
+  if (error) { console.error('Load teams error:', error); return; }
+  teams = {};
+  (data || []).forEach(row => {
+    teams[row.slot] = { name: row.name, logo: row.logo_url };
+  });
+  // Fill any missing slots
   SLOTS.forEach(slot => {
     if (!teams[slot]) teams[slot] = { name: 'Команда ' + slot, logo: null };
   });
 }
 
-async function saveData(key, value) {
-  try {
-    if (typeof window.storage !== 'undefined') {
-      await window.storage.set(key, JSON.stringify(value), true);
-    } else {
-      localStorage.setItem('kex_' + key, JSON.stringify(value));
+async function loadScores() {
+  const { data, error } = await supabaseClient.from('matches').select('*');
+  if (error) { console.error('Load scores error:', error); return; }
+  scores = {};
+  (data || []).forEach(row => {
+    if (row.score_a !== null && row.score_b !== null) {
+      scores[row.match_id] = { a: row.score_a, b: row.score_b };
     }
-  } catch (e) { console.error('Save error', e); }
+  });
 }
 
+// ========== REALTIME ==========
+function setupRealtime() {
+  const channel = supabaseClient.channel('tournament-updates')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, async (payload) => {
+      console.log('Teams change:', payload);
+      await loadTeams();
+      renderAll();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, async (payload) => {
+      console.log('Matches change:', payload);
+      await loadScores();
+      renderAll();
+    })
+    .subscribe((status) => {
+      console.log('Realtime status:', status);
+      const indicator = document.getElementById('realtimeIndicator');
+      const label = document.getElementById('realtimeLabel');
+      if (status === 'SUBSCRIBED') {
+        indicator.classList.add('online');
+        label.textContent = 'Онлайн';
+      } else {
+        indicator.classList.remove('online');
+        label.textContent = status === 'CLOSED' ? 'Не в сети' : 'Подключение...';
+      }
+    });
+}
+
+// ========== AUTH ==========
+async function checkAuth() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    // Verify admin status
+    const { data, error } = await supabaseClient.from('admins').select('email').eq('email', currentUser.email).maybeSingle();
+    if (data) {
+      isAdmin = true;
+      document.body.classList.add('admin-mode');
+      document.getElementById('adminToggle').classList.add('active');
+      document.getElementById('adminToggleLabel').textContent = currentUser.email.split('@')[0];
+    } else {
+      // Logged in but not admin — sign out
+      await supabaseClient.auth.signOut();
+      currentUser = null;
+    }
+  }
+}
+
+window.performLogin = async function() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errorEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+
+  errorEl.classList.remove('show');
+  if (!email || !password) {
+    errorEl.textContent = 'Введите email и пароль';
+    errorEl.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span>';
+
+  try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) {
+      errorEl.textContent = error.message === 'Invalid login credentials' ? 'Неверный email или пароль' : error.message;
+      errorEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Войти';
+      return;
+    }
+    // Check admin
+    const { data: adminData } = await supabaseClient.from('admins').select('email').eq('email', email).maybeSingle();
+    if (!adminData) {
+      await supabaseClient.auth.signOut();
+      errorEl.textContent = 'Этот email не имеет прав администратора';
+      errorEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Войти';
+      return;
+    }
+    currentUser = data.user;
+    isAdmin = true;
+    document.body.classList.add('admin-mode');
+    document.getElementById('adminToggle').classList.add('active');
+    document.getElementById('adminToggleLabel').textContent = email.split('@')[0];
+    closeModal('loginModal');
+    showToast('Добро пожаловать, ' + email.split('@')[0]);
+    btn.disabled = false;
+    btn.textContent = 'Войти';
+  } catch (e) {
+    errorEl.textContent = 'Ошибка соединения: ' + e.message;
+    errorEl.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Войти';
+  }
+};
+
+async function performLogout() {
+  await supabaseClient.auth.signOut();
+  isAdmin = false;
+  currentUser = null;
+  document.body.classList.remove('admin-mode');
+  document.getElementById('adminToggle').classList.remove('active');
+  document.getElementById('adminToggleLabel').textContent = 'Войти';
+  showToast('Вы вышли из режима управления');
+}
+
+// ========== HELPERS ==========
 function escapeHTML(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -869,19 +1082,21 @@ function teamDisplay(slot, alignRight) {
   </div>`;
 }
 
+// ========== RENDER ==========
 function renderSchedule() {
   const tabsEl = document.getElementById('dayTabs');
   const containerEl = document.getElementById('scheduleContainer');
+  const activeDay = tabsEl.querySelector('.tab-btn.active')?.dataset.day || '1';
 
-  tabsEl.innerHTML = SCHEDULE.map((d, i) => `
-    <button class="tab-btn ${i === 0 ? 'active' : ''}" data-day="${d.day}">
+  tabsEl.innerHTML = SCHEDULE.map((d) => `
+    <button class="tab-btn ${String(d.day) === String(activeDay) ? 'active' : ''}" data-day="${d.day}">
       <span class="day-num">DAY 0${d.day} · ${d.date}</span>
       <span class="day-title-tab">${d.dayLabel}</span>
     </button>
   `).join('');
 
-  containerEl.innerHTML = SCHEDULE.map((d, i) => `
-    <div class="day-content ${i === 0 ? 'active' : ''}" data-day="${d.day}">
+  containerEl.innerHTML = SCHEDULE.map((d) => `
+    <div class="day-content ${String(d.day) === String(activeDay) ? 'active' : ''}" data-day="${d.day}">
       <div class="day-overview">
         <div class="overview-item"><div class="overview-label">Начало</div><div class="overview-value">${d.start}</div></div>
         <div class="overview-item"><div class="overview-label">Окончание</div><div class="overview-value">${d.end}</div></div>
@@ -944,13 +1159,13 @@ function renderItem(item) {
 
 function renderMatchCard(m) {
   const score = scores[m.id];
-  const hasScore = score && score.a !== undefined && score.b !== undefined && score.a !== '' && score.b !== '';
+  const hasScore = score && score.a !== undefined && score.b !== undefined;
   const detail = m.detail ? `<div class="match-detail">${m.detail}</div>` : '';
   const scoreDisplay = hasScore
     ? `<span class="match-score played">${score.a} : ${score.b}</span>`
     : '<span class="match-score empty">— : —</span>';
   return `
-    <div class="match-card ${m.cls}" onclick="openScoreEdit('${m.id}', '${m.a}', '${m.b}', '${escapeHTML(m.stage)}')">
+    <div class="match-card ${m.cls}" data-match-id="${m.id}" data-slot-a="${m.a}" data-slot-b="${m.b}" data-stage="${escapeHTML(m.stage)}">
       <div class="match-stage">${m.stage}</div>
       <div class="match-row-inner">
         ${teamDisplay(m.a, false)}
@@ -961,6 +1176,12 @@ function renderMatchCard(m) {
     </div>
   `;
 }
+
+document.getElementById('scheduleContainer').addEventListener('click', (e) => {
+  const card = e.target.closest('.match-card');
+  if (!card) return;
+  openScoreEdit(card.dataset.matchId, card.dataset.slotA, card.dataset.slotB, card.dataset.stage);
+});
 
 function calculateStandings() {
   const groups = { A: [], B: [], C: [], D: [] };
@@ -977,7 +1198,7 @@ function calculateStandings() {
       [item.f1, item.f2].forEach(m => {
         if (!m || m.cls !== 'group') return;
         const score = scores[m.id];
-        if (!score || score.a === undefined || score.b === undefined || score.a === '' || score.b === '') return;
+        if (!score || score.a === undefined || score.b === undefined) return;
         const a = parseInt(score.a), b = parseInt(score.b);
         if (isNaN(a) || isNaN(b)) return;
         const groupLetter = m.a[0];
@@ -1018,15 +1239,9 @@ function renderStandings() {
           <table class="standings-table">
             <thead>
               <tr>
-                <th></th>
-                <th>Команда</th>
-                <th class="center">И</th>
-                <th class="center">В</th>
-                <th class="center">Н</th>
-                <th class="center">П</th>
-                <th class="center">М</th>
-                <th class="center">±</th>
-                <th class="center">О</th>
+                <th></th><th>Команда</th>
+                <th class="center">И</th><th class="center">В</th><th class="center">Н</th>
+                <th class="center">П</th><th class="center">М</th><th class="center">±</th><th class="center">О</th>
               </tr>
             </thead>
             <tbody>
@@ -1072,7 +1287,7 @@ function renderTeams() {
           const slot = letter + num;
           const team = teams[slot];
           return `
-            <div class="team-row-mgmt" onclick="openTeamEdit('${slot}')">
+            <div class="team-row-mgmt" data-slot="${slot}">
               <div class="team-logo">${team.logo ? `<img src="${team.logo}" alt="">` : initialsFromName(team.name)}</div>
               <div class="team-name-mgmt">${escapeHTML(team.name)}</div>
               <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-light);">${slot}</div>
@@ -1082,10 +1297,14 @@ function renderTeams() {
       </div>
     </div>
   `).join('');
+  container.querySelectorAll('.team-row-mgmt').forEach(row => {
+    row.addEventListener('click', () => openTeamEdit(row.dataset.slot));
+  });
 }
 
+// ========== TEAM EDIT ==========
 function openTeamEdit(slot) {
-  if (!isAdmin) { showToast('Включите режим управления'); return; }
+  if (!isAdmin) { showToast('Войдите как администратор', 'error'); return; }
   currentEditingTeam = slot;
   const team = teams[slot];
   document.getElementById('teamModalSlot').textContent = `Группа ${slot[0]} · слот ${slot}`;
@@ -1100,50 +1319,89 @@ function updateLogoPreview(logo) {
   else preview.textContent = initialsFromName(teams[currentEditingTeam].name);
 }
 
-function handleLogoUpload(e) {
+let pendingLogoFile = null;
+let pendingLogoCleared = false;
+
+window.handleLogoUpload = function(e) {
   const file = e.target.files[0];
   if (!file) return;
-  if (file.size > 4 * 1024 * 1024) { showToast('Файл слишком большой (макс 4 МБ)'); return; }
+  if (file.size > 4 * 1024 * 1024) { showToast('Файл слишком большой (макс 4 МБ)', 'error'); return; }
   const reader = new FileReader();
   reader.onload = (ev) => {
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = 200; canvas.height = 200;
+      canvas.width = 256; canvas.height = 256;
       const ctx = canvas.getContext('2d');
       const size = Math.min(img.width, img.height);
       const sx = (img.width - size) / 2;
       const sy = (img.height - size) / 2;
       ctx.fillStyle = '#FAFAF7';
-      ctx.fillRect(0, 0, 200, 200);
-      ctx.drawImage(img, sx, sy, size, size, 0, 0, 200, 200);
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      teams[currentEditingTeam].logo = dataUrl;
-      updateLogoPreview(dataUrl);
+      ctx.fillRect(0, 0, 256, 256);
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, 256, 256);
+      canvas.toBlob((blob) => {
+        pendingLogoFile = blob;
+        pendingLogoCleared = false;
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        updateLogoPreview(dataUrl);
+      }, 'image/jpeg', 0.85);
     };
     img.src = ev.target.result;
   };
   reader.readAsDataURL(file);
-}
+};
 
-function clearLogo() {
-  teams[currentEditingTeam].logo = null;
+window.clearLogo = function() {
+  pendingLogoFile = null;
+  pendingLogoCleared = true;
   updateLogoPreview(null);
   document.getElementById('logoInput').value = '';
-}
+};
 
-async function saveTeam() {
+window.saveTeam = async function() {
   const name = document.getElementById('teamNameInput').value.trim();
-  if (!name) { showToast('Введите название команды'); return; }
-  teams[currentEditingTeam].name = name;
-  await saveData('teams', teams);
-  closeModal('teamModal');
-  renderAll();
-  showToast('Команда обновлена');
-}
+  if (!name) { showToast('Введите название команды', 'error'); return; }
+  const btn = document.getElementById('saveTeamBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span>';
 
+  try {
+    let logoUrl = teams[currentEditingTeam].logo;
+
+    if (pendingLogoCleared) {
+      logoUrl = null;
+    } else if (pendingLogoFile) {
+      const fileName = `${currentEditingTeam}_${Date.now()}.jpg`;
+      const { error: uploadError } = await supabaseClient.storage
+        .from(STORAGE_BUCKET)
+        .upload(fileName, pendingLogoFile, { contentType: 'image/jpeg', upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(fileName);
+      logoUrl = urlData.publicUrl;
+    }
+
+    const { error: updateError } = await supabaseClient.from('teams')
+      .upsert({ slot: currentEditingTeam, name, logo_url: logoUrl }, { onConflict: 'slot' });
+    if (updateError) throw updateError;
+
+    teams[currentEditingTeam] = { name, logo: logoUrl };
+    pendingLogoFile = null;
+    pendingLogoCleared = false;
+    closeModal('teamModal');
+    renderAll();
+    showToast('Команда обновлена');
+  } catch (e) {
+    console.error(e);
+    showToast('Ошибка: ' + (e.message || 'не удалось сохранить'), 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Сохранить';
+  }
+};
+
+// ========== SCORE EDIT ==========
 function openScoreEdit(matchId, slotA, slotB, stage) {
-  if (!isAdmin) { showToast('Включите режим управления'); return; }
+  if (!isAdmin) { showToast('Войдите как администратор', 'error'); return; }
   currentEditingMatch = { id: matchId, slotA, slotB, stage };
   document.getElementById('scoreModalStage').textContent = stage;
 
@@ -1174,52 +1432,90 @@ function openScoreEdit(matchId, slotA, slotB, stage) {
   setTimeout(() => document.getElementById('score1').focus(), 100);
 }
 
-async function saveScore() {
+window.saveScore = async function() {
   const a = document.getElementById('score1').value;
   const b = document.getElementById('score2').value;
-  if (a === '' || b === '') { showToast('Введите счёт обеих команд'); return; }
+  if (a === '' || b === '') { showToast('Введите счёт обеих команд', 'error'); return; }
   const aNum = parseInt(a), bNum = parseInt(b);
-  if (isNaN(aNum) || isNaN(bNum) || aNum < 0 || bNum < 0) { showToast('Введите корректный счёт'); return; }
-  scores[currentEditingMatch.id] = { a: aNum, b: bNum };
-  await saveData('scores', scores);
-  closeModal('scoreModal');
-  renderAll();
-  showToast('Счёт сохранён');
-}
+  if (isNaN(aNum) || isNaN(bNum) || aNum < 0 || bNum < 0) { showToast('Введите корректный счёт', 'error'); return; }
 
-async function clearScore() {
+  const btn = document.getElementById('saveScoreBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span>';
+
+  try {
+    const { error } = await supabaseClient.from('matches')
+      .upsert({ match_id: currentEditingMatch.id, score_a: aNum, score_b: bNum }, { onConflict: 'match_id' });
+    if (error) throw error;
+    scores[currentEditingMatch.id] = { a: aNum, b: bNum };
+    closeModal('scoreModal');
+    renderAll();
+    showToast('Счёт сохранён');
+  } catch (e) {
+    console.error(e);
+    showToast('Ошибка: ' + (e.message || 'не удалось сохранить'), 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Сохранить';
+  }
+};
+
+window.clearScore = async function() {
   if (!confirm('Удалить счёт этого матча?')) return;
-  delete scores[currentEditingMatch.id];
-  await saveData('scores', scores);
-  closeModal('scoreModal');
-  renderAll();
-  showToast('Счёт удалён');
-}
+  try {
+    const { error } = await supabaseClient.from('matches').delete().eq('match_id', currentEditingMatch.id);
+    if (error) throw error;
+    delete scores[currentEditingMatch.id];
+    closeModal('scoreModal');
+    renderAll();
+    showToast('Счёт удалён');
+  } catch (e) {
+    console.error(e);
+    showToast('Ошибка: ' + (e.message || 'не удалось удалить'), 'error');
+  }
+};
 
-function openModal(id) { document.getElementById(id).classList.add('active'); }
-function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+// ========== MODALS ==========
+window.openModal = function(id) { document.getElementById(id).classList.add('active'); };
+window.closeModal = function(id) { document.getElementById(id).classList.remove('active'); };
 
 document.querySelectorAll('.modal-backdrop').forEach(m => {
   m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('active'); });
 });
 
+// ========== TOAST ==========
 let toastTimer;
-function showToast(msg) {
+window.showToast = function(msg, type = '') {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
+  t.classList.toggle('error', type === 'error');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
-}
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+};
 
+// ========== ADMIN TOGGLE ==========
 document.getElementById('adminToggle').addEventListener('click', () => {
-  isAdmin = !isAdmin;
-  document.body.classList.toggle('admin-mode', isAdmin);
-  document.getElementById('adminToggle').classList.toggle('active', isAdmin);
-  document.getElementById('adminToggleLabel').textContent = isAdmin ? 'Включён' : 'Управление';
-  showToast(isAdmin ? 'Режим управления включён' : 'Режим управления выключен');
+  if (isAdmin) {
+    if (confirm('Выйти из режима управления?')) performLogout();
+  } else {
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('loginError').classList.remove('show');
+    openModal('loginModal');
+    setTimeout(() => document.getElementById('loginEmail').focus(), 100);
+  }
 });
 
+// Enter key in login
+document.getElementById('loginPassword').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') performLogin();
+});
+document.getElementById('loginEmail').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') document.getElementById('loginPassword').focus();
+});
+
+// ========== NAVIGATION ==========
 document.querySelectorAll('[data-section-link]').forEach(link => {
   link.addEventListener('click', (e) => {
     e.preventDefault();
@@ -1236,6 +1532,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') document.querySelectorAll('.modal-backdrop.active').forEach(m => m.classList.remove('active'));
 });
 
+// ========== INIT ==========
 function renderAll() {
   renderSchedule();
   renderStandings();
@@ -1243,8 +1540,18 @@ function renderAll() {
 }
 
 (async function init() {
-  await loadData();
-  renderAll();
+  try {
+    await Promise.all([loadTeams(), loadScores()]);
+    await checkAuth();
+    setupRealtime();
+    renderAll();
+  } catch (e) {
+    console.error('Init error:', e);
+    showToast('Ошибка загрузки: ' + e.message, 'error');
+  } finally {
+    document.getElementById('fullLoader').classList.add('hide');
+    setTimeout(() => document.getElementById('fullLoader').style.display = 'none', 400);
+  }
 })();
 </script>
 
