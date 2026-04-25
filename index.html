@@ -501,11 +501,12 @@ body.admin-mode .admin-only { display: flex !important; }
   .day-overview { grid-template-columns: repeat(2, 1fr); }
   .standings-grid { grid-template-columns: 1fr; }
   .format-grid { grid-template-columns: 1fr; gap: 32px; }
-  .nav { gap: 16px; }
+  .header-inner { flex-wrap: wrap; gap: 12px; row-gap: 14px; }
+  .nav { gap: 14px; flex-wrap: wrap; order: 3; width: 100%; padding-top: 12px; border-top: 1px solid var(--line); justify-content: space-between; }
   .nav a { font-size: 12px; }
-  .nav a[data-section-link="info"] { display: none; }
-  .header-inner { flex-wrap: wrap; gap: 12px; }
+  .realtime-indicator { order: 1; margin-left: auto; }
   .realtime-indicator span { display: none; }
+  .admin-toggle { order: 2; }
 }
 @media (max-width: 640px) {
   .hero { padding: 48px 20px 40px; }
@@ -527,6 +528,9 @@ body.admin-mode .admin-only { display: flex !important; }
   .standings-table th:nth-child(6), .standings-table td:nth-child(4),
   .standings-table td:nth-child(5), .standings-table td:nth-child(6) { display: none; }
   .admin-toggle span { display: none; }
+  .nav { gap: 8px; }
+  .nav a { font-size: 11px; letter-spacing: 0.03em; }
+  .brand-text { font-size: 11px; }
 }
 </style>
 </head>
