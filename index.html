@@ -929,7 +929,7 @@ const SCHEDULE = [
   { day: 3, date: '09.05', dayLabel: 'Плей-офф · финал', start: '18:00', end: '~21:00', matchCount: 8, stage: 'Плей-офф', items: [
     { type: 'match', time: '18:00', endTime: '18:23', f1: { id: 'QF1', stage: 'Четвертьфинал · 1', cls: 'qf', a: 'GA1', b: 'GC2', detail: '1-е место группы A — 2-е место группы C' }, f2: { id: 'QF2', stage: 'Четвертьфинал · 2', cls: 'qf', a: 'GC1', b: 'GA2', detail: '1-е место группы C — 2-е место группы A' } },
     { type: 'match', time: '18:28', endTime: '18:51', f1: { id: 'QF3', stage: 'Четвертьфинал · 3', cls: 'qf', a: 'GB1', b: 'GD2', detail: '1-е место группы B — 2-е место группы D' }, f2: { id: 'QF4', stage: 'Четвертьфинал · 4', cls: 'qf', a: 'GD1', b: 'GB2', detail: '1-е место группы D — 2-е место группы B' } },
-    { type: 'match', time: '18:56', endTime: '19:19', f1: { id: 'SF1', stage: 'Полуфинал · 1', cls: 'sf', a: 'QF1', b: 'QF2', detail: 'Победитель ¼ №1 — победитель ¼ №2' }, f2: { id: 'SF2', stage: 'Полуфинал · 2', cls: 'sf', a: 'QF3', b: 'QF4', detail: 'Победитель ¼ №3 — победитель ¼ №4' } },
+    { type: 'match', time: '18:56', endTime: '19:19', f1: { id: 'SF1', stage: 'Полуфинал · 1', cls: 'sf', a: 'QF1', b: 'QF3', detail: 'Победитель ¼ №1 — победитель ¼ №3' }, f2: { id: 'SF2', stage: 'Полуфинал · 2', cls: 'sf', a: 'QF2', b: 'QF4', detail: 'Победитель ¼ №2 — победитель ¼ №4' } },
     { type: 'event', time: '19:19', duration: '15 мин', subtle: true, title: 'Перерыв · подготовка к финалу', sub: 'Восстановление команд, разминка' },
     { type: 'match', time: '19:34', endTime: '19:57', single: true, f1: { id: 'BRZ', stage: 'Матч за 3-е место', cls: 'bronze-match', a: 'SF1L', b: 'SF2L', detail: 'Проигравшие полуфиналов' } },
     { type: 'match', time: '20:02', endTime: '20:25', single: true, f1: { id: 'FINAL', stage: '★ Финал турнира', cls: 'final', a: 'SF1W', b: 'SF2W', detail: 'Победители полуфиналов · кульминация турнира' } },
@@ -1152,9 +1152,9 @@ function getPlayoffOutcome(matchId, type) {
     slotA = resolveSlot(pair.a).slot;
     slotB = resolveSlot(pair.b).slot;
   } else if (matchId === 'SF1') {
-    slotA = resolveSlot('QF1').slot; slotB = resolveSlot('QF2').slot;
+    slotA = resolveSlot('QF1').slot; slotB = resolveSlot('QF3').slot;
   } else if (matchId === 'SF2') {
-    slotA = resolveSlot('QF3').slot; slotB = resolveSlot('QF4').slot;
+    slotA = resolveSlot('QF2').slot; slotB = resolveSlot('QF4').slot;
   } else {
     return null;
   }
