@@ -928,12 +928,12 @@ const SCHEDULE = [
   ]},
   { day: 3, date: '09.05', dayLabel: 'Плей-офф · финал', start: '18:00', end: '~21:00', matchCount: 8, stage: 'Плей-офф', items: [
     { type: 'match', time: '18:00', endTime: '18:23', f1: { id: 'QF1', stage: 'Четвертьфинал · 1', cls: 'qf', a: 'GA1', b: 'GC2', detail: '1-е место группы A — 2-е место группы C' }, f2: { id: 'QF2', stage: 'Четвертьфинал · 2', cls: 'qf', a: 'GB1', b: 'GD2', detail: '1-е место группы B — 2-е место группы D' } },
-    { type: 'match', time: '18:26', endTime: '18:49', f1: { id: 'QF3', stage: 'Четвертьфинал · 3', cls: 'qf', a: 'GC1', b: 'GA2', detail: '1-е место группы C — 2-е место группы A' }, f2: { id: 'QF4', stage: 'Четвертьфинал · 4', cls: 'qf', a: 'GD1', b: 'GB2', detail: '1-е место группы D — 2-е место группы B' } },
-    { type: 'match', time: '18:52', endTime: '19:15', f1: { id: 'SF1', stage: 'Полуфинал · 1', cls: 'sf', a: 'QF1', b: 'QF4', detail: 'Победитель ¼ №1 — победитель ¼ №4' }, f2: { id: 'SF2', stage: 'Полуфинал · 2', cls: 'sf', a: 'QF2', b: 'QF3', detail: 'Победитель ¼ №2 — победитель ¼ №3' } },
-    { type: 'event', time: '19:18', duration: '12 мин', subtle: true, title: 'Перерыв · подготовка к финалу', sub: 'Восстановление команд, разминка' },
-    { type: 'match', time: '19:30', endTime: '19:53', single: true, f1: { id: 'BRZ', stage: 'Матч за 3-е место', cls: 'bronze-match', a: 'SF1L', b: 'SF2L', detail: 'Проигравшие полуфиналов' } },
-    { type: 'match', time: '19:56', endTime: '20:19', single: true, f1: { id: 'FINAL', stage: '★ Финал турнира', cls: 'final', a: 'SF1W', b: 'SF2W', detail: 'Победители полуфиналов · кульминация турнира' } },
-    { type: 'event', time: '20:25', duration: '~35 мин', title: 'Церемония награждения', sub: 'Кубок чемпиона · медали · индивидуальные номинации' },
+    { type: 'match', time: '18:28', endTime: '18:51', f1: { id: 'QF3', stage: 'Четвертьфинал · 3', cls: 'qf', a: 'GC1', b: 'GA2', detail: '1-е место группы C — 2-е место группы A' }, f2: { id: 'QF4', stage: 'Четвертьфинал · 4', cls: 'qf', a: 'GD1', b: 'GB2', detail: '1-е место группы D — 2-е место группы B' } },
+    { type: 'match', time: '18:56', endTime: '19:19', f1: { id: 'SF1', stage: 'Полуфинал · 1', cls: 'sf', a: 'QF1', b: 'QF4', detail: 'Победитель ¼ №1 — победитель ¼ №4' }, f2: { id: 'SF2', stage: 'Полуфинал · 2', cls: 'sf', a: 'QF2', b: 'QF3', detail: 'Победитель ¼ №2 — победитель ¼ №3' } },
+    { type: 'event', time: '19:19', duration: '15 мин', subtle: true, title: 'Перерыв · подготовка к финалу', sub: 'Восстановление команд, разминка' },
+    { type: 'match', time: '19:34', endTime: '19:57', single: true, f1: { id: 'BRZ', stage: 'Матч за 3-е место', cls: 'bronze-match', a: 'SF1L', b: 'SF2L', detail: 'Проигравшие полуфиналов' } },
+    { type: 'match', time: '20:02', endTime: '20:25', single: true, f1: { id: 'FINAL', stage: '★ Финал турнира', cls: 'final', a: 'SF1W', b: 'SF2W', detail: 'Победители полуфиналов · кульминация турнира' } },
+    { type: 'event', time: '20:30', duration: '~30 мин', title: 'Церемония награждения', sub: 'Кубок чемпиона · медали · индивидуальные номинации' },
   ]},
 ];
 
@@ -1127,6 +1127,68 @@ function resolveGroupSlot(placeholder) {
   return { slot: team.slot, resolved: true };
 }
 
+// Карта QF1/QF2/... → пары команд для матча (с разрешением групповых плейсхолдеров)
+const PLAYOFF_PAIRS = {
+  'QF1': { a: 'GA1', b: 'GC2' },
+  'QF2': { a: 'GB1', b: 'GD2' },
+  'QF3': { a: 'GC1', b: 'GA2' },
+  'QF4': { a: 'GD1', b: 'GB2' }
+};
+
+// Получаем победителя/проигравшего матча плей-офф по его id
+// type: 'W' = победитель, 'L' = проигравший
+function getPlayoffOutcome(matchId, type) {
+  const score = scores[matchId];
+  if (!score || score.a === undefined || score.b === undefined) return null;
+  const a = parseInt(score.a), b = parseInt(score.b);
+  if (isNaN(a) || isNaN(b)) return null;
+  if (a === b) return null; // ничья — победитель не определён (нужны пенальти, но мы не отслеживаем)
+
+  // Определяем кто играл в этом матче
+  let slotA, slotB;
+  if (PLAYOFF_PAIRS[matchId]) {
+    // Это четвертьфинал — берём слоты из карты с разрешением групповых
+    const pair = PLAYOFF_PAIRS[matchId];
+    slotA = resolveSlot(pair.a).slot;
+    slotB = resolveSlot(pair.b).slot;
+  } else if (matchId === 'SF1') {
+    slotA = resolveSlot('QF1').slot; slotB = resolveSlot('QF4').slot;
+  } else if (matchId === 'SF2') {
+    slotA = resolveSlot('QF2').slot; slotB = resolveSlot('QF3').slot;
+  } else {
+    return null;
+  }
+
+  if (type === 'W') return a > b ? slotA : slotB;
+  if (type === 'L') return a > b ? slotB : slotA;
+  return null;
+}
+
+// Универсальная функция: разрешает любой плейсхолдер (групповой или плей-офф) в реальный слот
+// Возвращает { slot, resolved }
+function resolveSlot(placeholder) {
+  if (isGroupPlaceholder(placeholder)) {
+    return resolveGroupSlot(placeholder);
+  }
+  // QF1, QF2, QF3, QF4 — победители четвертьфиналов
+  if (/^QF[1-4]$/.test(placeholder)) {
+    const winner = getPlayoffOutcome(placeholder, 'W');
+    if (!winner) return { slot: placeholder, resolved: false };
+    // Победитель может быть групповым плейсхолдером (если QF был резолвлен через GA1) — рекурсия
+    return resolveSlot(winner);
+  }
+  // SF1W, SF2W — победители полуфиналов; SF1L, SF2L — проигравшие
+  if (/^SF[12][LW]$/.test(placeholder)) {
+    const sfId = placeholder.substring(0, 3); // SF1 или SF2
+    const type = placeholder[3]; // W или L
+    const result = getPlayoffOutcome(sfId, type);
+    if (!result) return { slot: placeholder, resolved: false };
+    return resolveSlot(result);
+  }
+  // Это уже реальный слот команды (A1, B2 и т.д.) или просто id
+  return { slot: placeholder, resolved: true };
+}
+
 function placeholderLabel(slot) {
   const map = {
     'QF1': 'Поб. ¼ №1', 'QF2': 'Поб. ¼ №2', 'QF3': 'Поб. ¼ №3', 'QF4': 'Поб. ¼ №4',
@@ -1141,25 +1203,24 @@ function placeholderLabel(slot) {
 }
 
 function teamDisplay(slot, alignRight) {
-  // Если это групповой плейсхолдер — пытаемся разрешить через таблицу
-  if (isGroupPlaceholder(slot)) {
-    const { slot: realSlot, resolved } = resolveGroupSlot(slot);
+  // Универсально: пытаемся разрешить любой плейсхолдер
+  if (isGroupPlaceholder(slot) || isPlayoffPlaceholder(slot)) {
+    const { slot: realSlot, resolved } = resolveSlot(slot);
     if (resolved) {
-      // Группа сыграна — показываем реальную команду
       return `<div class="team-display ${alignRight ? 'right' : ''}">
         <div class="team-logo">${teamLogoHTML(realSlot)}</div>
         <div class="team-name-display">${escapeHTML(teamName(realSlot))}</div>
       </div>`;
     }
-    // Группа ещё не сыграна — показываем плейсхолдер
-    const groupLetter = slot[1];
-    const position = slot[2];
-    return `<div class="team-display ${alignRight ? 'right' : ''}">
-      <div class="team-logo">${groupLetter}${position}</div>
-      <div class="team-name-display" style="color: var(--text-muted); font-style: italic;">${position}-е место гр. ${groupLetter}</div>
-    </div>`;
-  }
-  if (isPlayoffPlaceholder(slot)) {
+    // Не определено — показываем плейсхолдер
+    if (isGroupPlaceholder(slot)) {
+      const groupLetter = slot[1];
+      const position = slot[2];
+      return `<div class="team-display ${alignRight ? 'right' : ''}">
+        <div class="team-logo">${groupLetter}${position}</div>
+        <div class="team-name-display" style="color: var(--text-muted); font-style: italic;">${position}-е место гр. ${groupLetter}</div>
+      </div>`;
+    }
     return `<div class="team-display ${alignRight ? 'right' : ''}">
       <div class="team-logo">${slot.replace(/[^0-9]/g,'')}</div>
       <div class="team-name-display" style="color: var(--text-muted); font-style: italic;">${placeholderLabel(slot)}</div>
@@ -1492,14 +1553,14 @@ window.saveTeam = async function() {
 
 // Возвращает {name, logo, displaySlot} для слота — с учётом разрешения групповых плейсхолдеров
 function getDisplayedTeam(slot) {
-  if (isGroupPlaceholder(slot)) {
-    const { slot: realSlot, resolved } = resolveGroupSlot(slot);
+  if (isGroupPlaceholder(slot) || isPlayoffPlaceholder(slot)) {
+    const { slot: realSlot, resolved } = resolveSlot(slot);
     if (resolved) {
       return { name: teamName(realSlot), logo: teamLogoHTML(realSlot), isReal: true };
     }
-    return { name: placeholderLabel(slot), logo: slot[1] + slot[2], isReal: false };
-  }
-  if (isPlayoffPlaceholder(slot)) {
+    if (isGroupPlaceholder(slot)) {
+      return { name: placeholderLabel(slot), logo: slot[1] + slot[2], isReal: false };
+    }
     return { name: placeholderLabel(slot), logo: slot.replace(/[^0-9]/g,''), isReal: false };
   }
   return { name: teamName(slot), logo: teamLogoHTML(slot), isReal: true };
